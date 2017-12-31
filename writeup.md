@@ -25,12 +25,7 @@ The goals / steps of this project are the following:
 [fit2]: ./output_images/fit2.png ""
 [threshold]: ./output_images/threshold.png ""
 [undistorted]: ./output_images/undistorted.png ""
-
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
+[plot]: ./output_images/plot.png ""
 [video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -94,19 +89,35 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+First I use the sliding window method to find out all the pixels that are included in all the boxes as shown in this image (part 5 in the ipython notebook)
 
-![alt text][image5]
+![alt text][fit]
+
+Then I seperate pixels into left and right, and fit their position with a polynominal.
+
+![alt text][fit2]
+
+After the first frame, I use the polynominal from last frame, and filter the points that are within a certain distance of the previous curve.
+
+At each frame, I use polynominal parameters from last frame to do a low pass filting
+
+```python
+new_left_fit = np.polyfit(lefty, leftx, 2)
+new_right_fit = np.polyfit(righty, rightx, 2)
+f = 0.8
+laneInfo.left_fit = laneInfo.left_fit * f + new_left_fit * (1-f)
+laneInfo.right_fit = laneInfo.right_fit * f + new_right_fit * (1-f)
+```
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+I did this in lines 117 through 118 in my code in the notebook in the function `findLane()`
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step in part 7 in the notebook in the function `overlayImg()`.  Here is an example of my result on a test image:
 
-![alt text][image6]
+![alt text][plot]
 
 ---
 
@@ -114,7 +125,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./output_optimized_project_video.mp4)
 
 ---
 
@@ -123,3 +134,9 @@ Here's a [link to my video result](./project_video.mp4)
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+
+Camera calibration, bird view warping are relatively easy.
+
+Finding out the appropriate parameter for the threshold image is very tricky. Different lighting condition, camera angle, road shape will all affect the result in this part. This is also the part that I think the pipeline will likely fail for difficult testcase. I think the best way to solve this is to test on more data.
+
+Fitting line rely on the threshold image. If the threshold image is good enough, the fitting will end up very well.
